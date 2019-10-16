@@ -22,16 +22,17 @@ public class Application {
 				System.out.print(r.getInt("Id") + ": ");
 				System.out.println(r.getString("name"));
 			}
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} 
+		catch (SQLException e) {e.printStackTrace();}
 		
 		manager.quit();
 	}
 	
 	
-	private void login() {
+	// chiamare questa funzione quando un utente prova a loggarsi
+	private void login(String name, String pwd) {
 		
+		// TODO
+		manager.checkUser(name, pwd);
 	}
 }
