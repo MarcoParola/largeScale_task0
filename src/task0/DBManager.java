@@ -58,6 +58,9 @@ public class DBManager {
 		try {
 			statement.execute(selectionSubjectsString);
 			result = statement.getResultSet();
+			
+			while(result.next())
+				list.add(new Subject(result.getInt("Id"), result.getInt("Credits"), result.getString("info")));
 		} 
 		catch (SQLException e) {e.printStackTrace();}
 		

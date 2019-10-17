@@ -5,6 +5,7 @@
   <version>0.0.1-SNAPSHOT</version>
   
   <build>
+  <defaultGoal>install</defaultGoal>
     <sourceDirectory>src</sourceDirectory>
     <plugins>
       <plugin>
@@ -19,17 +20,34 @@
   
   	<dependencies>
   	
+  	
+
+<dependency>
+<groupId>org.openjfx</groupId>
+<artifactId>javafx-base</artifactId>
+<version>11</version>
+</dependency>
+<dependency>
+<groupId>org.openjfx</groupId>
+<artifactId>javafx-web</artifactId>
+<version>11</version>
+</dependency>
+<dependency>
+<groupId>org.openjfx</groupId>
+<artifactId>javafx-fxml</artifactId>
+<version>11</version>
+</dependency>
+<dependency>
+<groupId>org.openjfx</groupId>
+<artifactId>javafx-controls</artifactId>
+<version>11</version>
+</dependency>
+  	
   	<dependency>
   		<groupId>mysql</groupId>
   		<artifactId>mysql-connector-java</artifactId>
   		<version>8.0.17</version>
   	</dependency>
-  	
-  	<dependency>
-  <groupId>org.openjfx</groupId>
-  <artifactId>javafx-controls</artifactId>
-  <version>11.0.2</version>
-</dependency>
   	
   </dependencies>
 </project>

@@ -12,7 +12,11 @@ public class Professor extends Person{
 		super(i, n, s);
 		
 		info = new SimpleStringProperty(inf);
-		
+	}
+	
+	
+	String getInfo() {
+		return String.valueOf(info);
 	}
 
 }
