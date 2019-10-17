@@ -1,17 +1,16 @@
 package task0;
 
-import java.util.ArrayList;
+import javafx.beans.property.*;
 
 public class Subject {
 
-	int id;
-	int credits;
-	ArrayList <SubjectComment> comments;
+	private final SimpleIntegerProperty id;
+	private final SimpleIntegerProperty credits;
+	
 	
 	// CONSTRUCTOR
 	public Subject(int i, int c) {
-		id = i;
-		credits = c;
-		comments = new ArrayList <SubjectComment>();
+		id = new SimpleIntegerProperty(i);
+		credits = new SimpleIntegerProperty(c);
 	}
 }

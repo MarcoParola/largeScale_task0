@@ -1,17 +1,17 @@
 package task0;
 
-import java.util.ArrayList;
+import javafx.beans.property.*;
 
 public class Professor extends Person{
 
-	ArrayList <ProfessorComment> comments;
+	private final SimpleStringProperty info;
 	
 	
 	// CONSTRUCTOR
-	public Professor(int i, String n, String s) {
+	public Professor(int i, String n, String s, String inf) {
 		super(i, n, s);
 		
-		comments = new ArrayList <ProfessorComment>();
+		info = new SimpleStringProperty(inf);
 		
 	}
 

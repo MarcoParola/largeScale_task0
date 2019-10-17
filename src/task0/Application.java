@@ -2,6 +2,7 @@ package task0;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Application {
 
@@ -15,7 +16,12 @@ public class Application {
 		
 		manager = new DBManager();
 		
-		ResultSet r = manager.getSubjects();
+		List <Professor> l = manager.getProfessors();
+		
+		for(int i=0; i< l.size(); i++)
+			System.out.println(l.get(i).getName());
+		
+		/*ResultSet r = manager.getSubjects();
 		
 		try {
 			while(r.next()) {
@@ -24,7 +30,7 @@ public class Application {
 			}
 		} 
 		catch (SQLException e) {e.printStackTrace();}
-		
+		*/
 		manager.quit();
 	}
 	

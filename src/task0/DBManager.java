@@ -1,6 +1,7 @@
 package task0;
 
 import java.sql.*;
+import java.util.*;
 
 public class DBManager {
 
@@ -50,24 +51,40 @@ public class DBManager {
 	
 	
 	// QUERY per il ritorno di tutte le materie
-	ResultSet getSubjects() {
+	List<Subject> getSubjects() {
+		
+		List <Subject> list = new ArrayList<Subject>();
+		
 		try {
 			statement.execute(selectionSubjectsString);
 			result = statement.getResultSet();
 		} 
 		catch (SQLException e) {e.printStackTrace();}
-		return result;
+		
+		return list;
 	}
 	
 	
 	
 	// QUERY per il ritorno di tutti i professori
-	void getProfessors() {
+	List<Professor> getProfessors() {
+		
+		List<Professor> list = new ArrayList<Professor>();
+		
 		try {
 			statement.execute(selectionProfessorsString);
 			result = statement.getResultSet();
+			
+			while(result.next()) {
+				
+				
+				list.add(new Professor(result.getInt("Id"), result.getString("name"),
+										result.getString("surname"), result.getString("info")));
+			}
 		} 
 		catch (SQLException e) {e.printStackTrace();}
+		
+		return list;
 	}
 	
 	
