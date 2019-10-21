@@ -3,23 +3,40 @@ package task0;
 import java.sql.*;
 import java.util.*;
 import javafx.application.*;
+import javafx.beans.property.*;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.*;
+import javafx.event.ActionEvent;
+import javafx.geometry.Insets;
 import javafx.scene.*;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.*;
 import javafx.scene.layout.*;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.util.*;
+
 
 public class Interfaccia extends Application {
+	
     Label usernameLab, passwordLab;
     TextField username, password;
     TextArea info, comment;
     Button loginBtn, commentBtn;
     ChoiceBox choose;
     TableView table, comments;
+    TableColumn idProfColumn, nameProfColumn, surnameProfColumn, idSubjectColumn, nameSubjectColumn, creditSubjectColumn;
     HBox loginBox, commentBox;
     VBox leftBox, rightBox;
     Group root;
     
     DBManager manager;
+    ObservableList<Professor> professorsList;
+    ObservableList<Subject> subjectsList;
+    
+    Student student;
+    
     
     
     @Override
@@ -47,8 +64,34 @@ public class Interfaccia extends Application {
         choose = new ChoiceBox();
         choose.getItems().add("Professors");
         choose.getItems().add("Subjects");
-        table = new TableView<>();
+        choose.getSelectionModel().selectFirst();
         
+        
+        // add event to choiceBox changing selection value
+        choose.getSelectionModel().selectedIndexProperty().addListener((ChangeListener<? super Number>) new ChangeListener<Number>() {
+
+			@Override
+			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				
+					if((choose.getItems().get((Integer) newValue)) == "Subjects")
+						setSubjectsList();
+					else if((choose.getItems().get((Integer) newValue)) == "Professors")
+						setProfessorsList();
+					
+					
+				System.out.println(choose.getSelectionModel().getSelectedIndex());
+			}
+          });
+        
+       
+        
+        prepareTable();
+        
+        loginBtn.setOnAction((ActionEvent e) -> loginAction());
+        
+        
+      
+        table.lookup(".scroll-bar:vertical"); 
         
         rightBox = new VBox(10);
         rightBox.getChildren().addAll(choose,table);
@@ -73,10 +116,16 @@ public class Interfaccia extends Application {
         setCssStyle();
     }
 
+    
+    
+    // STYLE
     private void setCssStyle(){
         root.setStyle("-fx-color:orange; -fx-font-size: 14; -fx-font-family: Arial");
     }
     
+    
+    
+    // STYLE
     private void setSizes(){
         loginBtn.setMinWidth(80);
         info.setMaxSize(540,100);
@@ -88,6 +137,9 @@ public class Interfaccia extends Application {
         comment.setMaxHeight(50);        
     }
     
+    
+    
+    // STYLE
     private void setPositions(){
         loginBox.setLayoutX(10);
         leftBox.setLayoutX(20); leftBox.setLayoutY(60);
@@ -95,42 +147,96 @@ public class Interfaccia extends Application {
         commentBox.setLayoutX(20); commentBox.setLayoutY(630);        
     }
     
-    public static void main(String[] args) {
-        launch(args);
+    
+    
+    // prepare table for professors and subjects
+    private void prepareTable() {
+    	
+    	professorsList = FXCollections.observableArrayList(); 
+        professorsList.addAll(manager.getProfessors());        
+        
+        subjectsList = FXCollections.observableArrayList(); 
+        subjectsList.addAll(manager.getSubjects());
+        
+        table = new TableView<>();
+        table.setEditable(true);
+        
+        idProfColumn = new TableColumn("ID");
+        idProfColumn.setCellValueFactory(new PropertyValueFactory<Professor, String>("id"));
+        
+        nameProfColumn = new TableColumn("NAME");
+        nameProfColumn.setCellValueFactory(new PropertyValueFactory<Professor, String>("name"));
+        
+        surnameProfColumn = new TableColumn("SURNAME");
+        surnameProfColumn.setCellValueFactory(new PropertyValueFactory<Professor, String>("surname"));
+                
+        idSubjectColumn = new TableColumn("ID");
+        idSubjectColumn.setCellValueFactory(new PropertyValueFactory<Subject, String>("id"));
+        
+        nameSubjectColumn = new TableColumn("NAME");
+        nameSubjectColumn.setCellValueFactory(new PropertyValueFactory<Subject, String>("name"));
+        
+        creditSubjectColumn = new TableColumn("CREDITS");
+        creditSubjectColumn.setCellValueFactory(new PropertyValueFactory<Subject, String>("credits"));
+        
+        setProfessorsList();
+       
     }
     
+    
+    // update table: set professors information
+    private void setProfessorsList() {
+		table.getColumns().clear();
+    	table.setItems(professorsList);
+    	table.getColumns().addAll(idProfColumn, nameProfColumn, surnameProfColumn);
+    }
+    
+    
+    
+    // update table: set subjects information
+    private void setSubjectsList() {
+    	table.getColumns().clear();
+    	table.setItems(subjectsList);
+    	table.getColumns().addAll(idSubjectColumn, nameSubjectColumn, creditSubjectColumn);
+    }
+    
+    
+    
+    // function for click on loginButton
+    private void loginAction() {
+    	student = manager.checkUser(username.getText(), password.getText());
+    	
+    	if(student != null) {
+            
+            int i = 0;
+            while(i < subjectsList.size()) {
+            	if(subjectsList.get(i).getDegree() == student.getDegree())
+            		i++;
+            	else
+            		subjectsList.remove(i);
+            	
+            }
+            
+            i = 0;
+            while(i < professorsList.size()) {
+            	if(professorsList.get(i).getDegree() == student.getDegree())
+            		i++;
+            	else
+            		professorsList.remove(i);
+            }
+                          
+            if(choose.getSelectionModel().getSelectedIndex() == 1)
+				setSubjectsList();
+			else if(choose.getSelectionModel().getSelectedIndex() == 0)
+				setProfessorsList();
+    	}
+    }
+    
+    
+    
+    // MAIN
+    public static void main(String[] args) {
+        launch(args);
+    }   
 }
 
-
-/*
-public class Application {
-
-	static DBManager manager;
-	private Student loggedStudent;
-	
-	ArrayList <Professor> professors;
-	ArrayList <Subject> subjects;
-	
-	public static void main(String [] args) {
-		
-		manager = new DBManager();
-		
-		List <Professor> l = manager.getProfessors();
-		
-		for(int i=0; i< l.size(); i++)
-			System.out.println(l.get(i).getName());
-		
-		
-		manager.quit();
-	}
-	
-	
-	// chiamare questa funzione quando un utente prova a loggarsi
-	private void login(String name, String pwd) {
-		
-		// TODO
-		manager.checkUser(name, pwd);
-	}
-}
-
-*/

@@ -8,15 +8,18 @@ public class Professor extends Person{
 	
 	
 	// CONSTRUCTOR
-	public Professor(int i, String n, String s, String inf) {
-		super(i, n, s);
+	public Professor(int i, String n, String s, String inf, int d) {
+		super(i, n, s, d);
 		
 		info = new SimpleStringProperty(inf);
 	}
 	
 	
 	String getInfo() {
-		return String.valueOf(info);
+		return info.getValue();
+	}
+	void setInfo(String i) {
+		info.set(i);
 	}
 
 }
