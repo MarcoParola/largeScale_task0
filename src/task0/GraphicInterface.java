@@ -19,7 +19,7 @@ public class GraphicInterface extends Application {
     Label usernameLab, passwordLab;
     TextField username, password;
     TextArea info, comment;
-    Button loginBtn, commentBtn;
+    Button loginBtn, commentBtn, deleteBtn, updateBtn;;
     ChoiceBox choose;
     TableView table, comments;
     TableColumn idProfColumn, nameProfColumn, surnameProfColumn, idSubjectColumn, nameSubjectColumn, creditSubjectColumn;
@@ -46,6 +46,8 @@ public class GraphicInterface extends Application {
         passwordLab = new Label("Password:");
         password = new TextField();
         loginBtn = new Button("Login");
+        deleteBtn = new Button("Delete");
+        updateBtn = new Button("Update");
         
         loginBox = new HBox(10);
         loginBox.getChildren().addAll(usernameLab,username,passwordLab,password,loginBtn);
@@ -102,7 +104,7 @@ public class GraphicInterface extends Application {
         commentBtn = new Button("Comment");
         
         commentBox = new HBox(10);
-        commentBox.getChildren().addAll(comment,commentBtn);
+        commentBox.getChildren().addAll(comment,commentBtn, deleteBtn, updateBtn);
         
         root = new Group();
         root.getChildren().addAll(loginBox, leftBox, rightBox, commentBox);
@@ -147,6 +149,60 @@ public class GraphicInterface extends Application {
 	            }
 	            
 	            this.comment.setText("");
+	    
+            }else 
+            	System.out.println("You have to login!\n");
+            
+        });
+        
+        updateBtn.setOnAction((ActionEvent ev)->{
+            if(student != null) {
+	            if("Subjects".equals((String)choose.getValue())){
+	                Subject s = (Subject) comments.getSelectionModel().getSelectedItem();
+	                SubjectComment sc = (SubjectComment) comments.getSelectionModel().getSelectedItem();
+	                
+	                System.out.println(sc.getId());
+	                
+	                manager.updateCommentSubject(sc.getId(), sc.getText());
+	                
+	                this.setSubjectComments(s.getId());
+	            }else{
+	                Professor p = (Professor) table.getSelectionModel().getSelectedItem();
+	                ProfessorComment c = (ProfessorComment) comments.getSelectionModel().getSelectedItem();
+	                
+	                System.out.println(c.getId());
+	                
+	                manager.updateCommentProf(c.getId(), c.getText());
+	                
+	                this.setProfessorComments(p.getId());
+	            }
+	    
+            }else 
+            	System.out.println("You have to login!\n");
+            
+        });
+        
+        deleteBtn.setOnAction((ActionEvent ev)->{
+        	if(student != null) {
+	            if("Subjects".equals((String)choose.getValue())){
+	                Subject s = (Subject) comments.getSelectionModel().getSelectedItem();
+	                SubjectComment sc = (SubjectComment) comments.getSelectionModel().getSelectedItem();
+	                
+	                System.out.println(sc.getId());
+	                
+	                manager.deleteCommentSubject(sc.getId());
+	                
+	                this.setSubjectComments(s.getId());
+	            }else{
+	                Professor p = (Professor) table.getSelectionModel().getSelectedItem();
+	                ProfessorComment c = (ProfessorComment) comments.getSelectionModel().getSelectedItem();
+	                
+	                System.out.println(c.getId());
+	                
+	                manager.deleteCommentProf(c.getId());
+	                
+	                this.setProfessorComments(p.getId());
+	            }
 	    
             }else 
             	System.out.println("You have to login!\n");

@@ -59,6 +59,8 @@ public class DBManager {
         } 
         catch (SQLException e) {e.printStackTrace();}
     }
+    
+    
 
     // QUERY per il ritorno di tutte le materie
     List<Subject> getSubjects() {
@@ -75,6 +77,8 @@ public class DBManager {
         catch (SQLException e) {e.printStackTrace();}
         return list;
     }
+    
+    
 
     // QUERY per il ritorno di tutti i professori
     List<Professor> getProfessors() {
@@ -94,6 +98,9 @@ public class DBManager {
         return list;
     }
     
+    
+    
+    // QUERY to retrieve comments about subject
     List<Comment> getSubjectComments(int subjectID){
         List<Comment> list = new ArrayList<>();
         try {
@@ -110,6 +117,9 @@ public class DBManager {
         return list;   
     }
     
+    
+    
+    // QUERY to retrieve comments about prof
     List<ProfessorComment> getProfessorComments(int profID){
         List<ProfessorComment> list = new ArrayList<>();
         try {
@@ -118,9 +128,7 @@ public class DBManager {
 
             while(result.next()) {
             	if(result.getInt("professorID") == profID) {
-            		
-            		System.out.println(result.getString("text"));
-            
+            		            
 	                list.add(new ProfessorComment(result.getInt("id"), result.getString("text"),
 	                    result.getInt("userId"), result.getInt("professorId"), 
 	                    result.getDate("date")));
@@ -131,29 +139,6 @@ public class DBManager {
         return list;   
     }
     
-    /*
-
-    // TODO
-    void getSubjectsFiltered(String degreeCourse) {
-            try {
-                    selectSubjectsFiltered.setString(1, degreeCourse);
-                    result = selectSubjectsFiltered.executeQuery();
-            } 
-            catch (SQLException e) {e.printStackTrace();}
-
-    }
-
-
-
-    // TODO
-    void getProfessorsFiltered(String degreeCourse) {
-            try {
-                    selectProfessorsFiltered.setString(1, degreeCourse);
-                    result = selectProfessorsFiltered.executeQuery();
-            } 
-            catch (SQLException e) {e.printStackTrace();}
-    }
-    */
 
 
     // QUERY for login
@@ -173,6 +158,8 @@ public class DBManager {
         return null;
     }
 
+    
+    
     // QUERY per l'inserimento di un commento del prof
     void insertCommentProf(int u, int p, String t) {
         try {
@@ -186,6 +173,8 @@ public class DBManager {
         catch (SQLException e) {e.printStackTrace();}
     }
 
+    
+    
     // QUERY per l'inserimento di un commento della materia
     void insertCommentSubject(int u, int s, String t) {
         try {
@@ -198,7 +187,76 @@ public class DBManager {
         } 
         catch (SQLException e) {e.printStackTrace();}
     }
+    
+    
+    
+ // QUERY per l'aggiornamento di un commento del prof
+    void updateCommentProf(int i, String t) {
+        try {
+        	PreparedStatement ps = connection.prepareStatement("UPDATE `prof_comments` SET `text` = ? WHERE `prof_comments`.`id` = ?;");
+            ps.setString(1, t);
+            ps.setInt(2, i);
+            
+            System.out.println(ps.executeUpdate());            
+            
+        } 
+        catch (SQLException e) {e.printStackTrace();}
+    }
 
+    
+    
+    
+    
+    // QUERY per l'aggiornamento di un commento della materia
+    void updateCommentSubject(int i, String t) {
+    	
+    	
+    	
+        try {
+        	PreparedStatement ps = connection.prepareStatement("UPDATE `subject_comments` SET `text` = ? WHERE `subject_comments`.`id` = ?;");
+            ps.setString(1, t);
+            ps.setInt(2, i);
+
+            ps.executeUpdate();
+        } 
+        catch (SQLException e) {e.printStackTrace();}
+    }
+    
+    
+    
+    // QUERY per l'eliminazione di un commento del prof
+       void deleteCommentProf(int i) {
+           try {
+           		PreparedStatement ps = connection.prepareStatement("DELETE FROM `prof_comments` WHERE `prof_comments`.`id` = ?;");
+           		ps.setInt(1, i);
+               
+           		System.out.println(ps.executeUpdate());  
+           		ps.executeUpdate();
+               
+           } 
+           catch (SQLException e) {e.printStackTrace();}
+       }
+
+       
+       
+       
+       
+       // QUERY per l'eliminazione di un commento della materia
+       void deleteCommentSubject(int i) {
+       	
+       	
+       	
+           try {
+           	PreparedStatement ps = connection.prepareStatement("DELETE FROM `subject_comments` WHERE `subject_comments`.`id` = ?;");
+               ps.setInt(1, i);
+
+               ps.executeUpdate();
+           } 
+           catch (SQLException e) {e.printStackTrace();}
+       }
+       
+
+    // stop connection
     void quit() {
         try{
             connection.close();
