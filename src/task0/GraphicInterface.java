@@ -16,8 +16,8 @@ import javafx.stage.*;
 
 public class GraphicInterface extends Application {
     
-    Label usernameLab, passwordLab, nameLab, surnameAndCreditsLab, infoLab, studentLab;
-    TextField username, password, name, surnameAndCredits;
+    Label usernameLab, passwordLab, nameLab, surnameAndCreditsLab, infoLab, studentLab, profIdLab;
+    TextField username, password, name, surnameAndCredits, profId;
     TextArea info, comment, addInfo;
     Button loginBtn, logoutBtn, commentBtn, deleteBtn, updateBtn, addBtn, editBtn, deleteBtnProfSubj;
     ChoiceBox<String> choosePS, chooseDegree; //PS -> ProfessorSubject
@@ -25,7 +25,7 @@ public class GraphicInterface extends Application {
     TableColumn idProfColumn, nameProfColumn, surnameProfColumn, idSubjectColumn, nameSubjectColumn, creditSubjectColumn;
     TableColumn textColumn, dateColumn;
     HBox loginBox, logoutBox, commentBox, adminButtonsBox, FieldsAdminBox, chooseBox;
-    VBox leftBox, rightBox, nameSurnameBox, InfoVBox;
+    VBox leftBox, rightBox, nameSurnameBox, InfoVBox, profIdBox;
     Group root;
     
     DBManager manager;
@@ -86,7 +86,14 @@ public class GraphicInterface extends Application {
         nameSurnameBox = new VBox(10);
         nameSurnameBox.getChildren().addAll(nameLab,name, surnameAndCreditsLab, surnameAndCredits ); 
         
-        //Hbox with the 2 vbox created before and the add button.
+        //id prof vbox for admin
+        profIdLab = new Label("Professor Id:");
+        profId = new TextField();
+        
+        profIdBox = new VBox(10);
+        profIdBox.getChildren().addAll(profIdLab, profId);
+        
+        //Hbox with the 3 vbox created before and the add button.
         addBtn = new Button("Add");
         FieldsAdminBox = new HBox(10);
         FieldsAdminBox.getChildren().addAll(nameSurnameBox, InfoVBox, addBtn);
@@ -279,7 +286,7 @@ public class GraphicInterface extends Application {
             	if(!"All".equals((String)chooseDegree.getValue())) {
 	            	int degreeId = manager.getDegreeId(chooseDegree.getValue());
 	            	Subject s = new Subject(0, name.getText(), Integer.parseInt(surnameAndCredits.getText()),addInfo.getText(), degreeId );
-	                manager.insertSubject(s.getName(), s.getCredits(), s.getInfo(), s.getDegree());
+	                manager.insertSubject(s.getName(), s.getCredits(), s.getInfo(), s.getDegree(), Integer.parseInt(profId.getText()));
 	                name.setText("");
 	                surnameAndCredits.setText("");
 	                addInfo.setText("");	
@@ -350,7 +357,7 @@ public class GraphicInterface extends Application {
         adminButtonsBox.setLayoutX(900); adminButtonsBox.setLayoutY(530);
     }
     
-  //STYLE updates tables size based on the actual user (admin or not)
+    //STYLE updates tables size based on the actual user (admin or not)
   	private void updateSizes(){
   		if( student != null && student.getAdmin()) {
   			table.setMinHeight(400);
@@ -419,12 +426,22 @@ public class GraphicInterface extends Application {
         
     	table.setItems(professorsList);
     	table.getColumns().addAll(idProfColumn, nameProfColumn, surnameProfColumn);
-
+    	/*
+    	idProfColumn.prefWidthProperty().bind(table.widthProperty().multiply(0.08));
+    	nameProfColumn.prefWidthProperty().bind(table.widthProperty().multiply(0.46));
+    	surnameProfColumn.prefWidthProperty().bind(table.widthProperty().multiply(0.46));
+    	
+    	idProfColumn.setResizable(false);
+    	nameProfColumn.setResizable(false);
+    	surnameProfColumn.setResizable(false);
+    	*/
+        
 		if(student!= null && student.getAdmin()) {
 
 			FieldsAdminBox.setVisible(true);
 			infoLab.setText("Professor Informations:");
 			surnameAndCreditsLab.setText("Surname:");
+			FieldsAdminBox.getChildren().remove(profIdBox);
 			
         }else {
         	FieldsAdminBox.setVisible(false);
@@ -438,11 +455,21 @@ public class GraphicInterface extends Application {
     	table.setItems(subjectsList);
     	table.getColumns().addAll(idSubjectColumn, nameSubjectColumn, creditSubjectColumn);
     	comments.setItems(commentsList);
+    	/*
+    	idSubjectColumn.prefWidthProperty().bind(table.widthProperty().multiply(0.08));
+    	nameSubjectColumn.prefWidthProperty().bind(table.widthProperty().multiply(0.74));
+    	creditSubjectColumn.prefWidthProperty().bind(table.widthProperty().multiply(0.18));
     	
+    	idSubjectColumn.setResizable(false);
+    	nameSubjectColumn.setResizable(false);
+    	creditSubjectColumn.setResizable(false);
+    	*/
     	if(student!= null && student.getAdmin()) {
     		FieldsAdminBox.setVisible(true);
     		infoLab.setText("Subject Informations:");
 			surnameAndCreditsLab.setText("Credits:");
+			if(!FieldsAdminBox.getChildren().contains(profIdBox))
+				FieldsAdminBox.getChildren().add(2, profIdBox);
         }else {
         	FieldsAdminBox.setVisible(false);
         }

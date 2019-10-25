@@ -342,15 +342,33 @@ public class DBManager {
     	   catch (SQLException e) {e.printStackTrace();}
        }
        
-       void insertSubject(String n, int c, String i, int id) {
+       void insertSubject(String n, int c, String i, int degreeId, int profId) {
     	   try {
 	    	   	PreparedStatement ps = connection.prepareStatement("INSERT INTO subjects (name, credits, degree, info) VALUES (?, ?, ?, ?); ");
 				ps.setString(1, n);
 				ps.setInt(2, c);
-				ps.setInt(3, id);
+				ps.setInt(3, degreeId);
 				ps.setString(4, i);
 				
 				System.out.println("rows affected: "+ ps.executeUpdate());
+				
+				ps = connection.prepareStatement("select Id\r\n" + 
+													"from subjects \r\n" + 
+													"where name = ? and degree = ?;");
+				ps.setString(1, n);
+				ps.setInt(2, degreeId);
+				
+				result = ps.executeQuery();
+				result.next();
+				
+				int subjectId = result.getInt("Id");
+				
+				ps = connection.prepareStatement("INSERT INTO teaching VALUES (?, ?);");
+				ps.setInt(1, profId);
+				ps.setInt(2, subjectId);
+				
+				System.out.println("rows affected: "+ ps.executeUpdate());
+				
     	   }
     	   catch (SQLException e) {e.printStackTrace();}
        }
