@@ -5,13 +5,32 @@ import javafx.beans.property.*;
 public class Professor extends Person{
 
 	private final SimpleStringProperty info;
+	private final SimpleStringProperty name;
+	private final SimpleStringProperty surname;
 	
 	
 	// CONSTRUCTOR
 	public Professor(int i, String n, String s, String inf, int d) {
-		super(i, n, s, d);
+		super(i, d);
 		
+		name = new SimpleStringProperty(n);
+		surname = new SimpleStringProperty(s);
 		info = new SimpleStringProperty(inf);
+	}
+	
+	public String getName() {
+		return name.getValue();
+	}
+	public void setName(String n) {
+		name.set(n);
+	}
+	
+	
+	public String getSurname() {
+		return surname.getValue();
+	}
+	public void setSurname(String s) {
+		surname.set(s);
 	}
 	
 	
