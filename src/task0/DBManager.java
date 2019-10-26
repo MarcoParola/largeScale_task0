@@ -6,7 +6,7 @@ import java.util.*;
 public class DBManager {
 
     private static String ip = "localhost";
-    private static int port = 3306;
+    private static int port = 3307;
     private static String db_name = "studentsevaluations";
     private static String db_user = "root";
 
@@ -38,6 +38,7 @@ public class DBManager {
     private PreparedStatement insertSubjectCommentStatement;
     private PreparedStatement selectionDegreeIdStatement;
     private PreparedStatement selectionDegreeNameStatement;
+    private PreparedStatement selectionProfByDegree;
 
     /*
      
@@ -64,6 +65,15 @@ public class DBManager {
             insertSubjectCommentStatement = connection.prepareStatement(insertSubjectCommentString);
             selectionDegreeIdStatement = connection.prepareStatement(selectionDegreeIdString);
             selectionDegreeNameStatement = connection.prepareStatement(selectionDegreeNameString);
+            selectionProfByDegree = connection.prepareStatement("SELECT p.*" +
+                    "FROM professors p JOIN (\n" +
+                    "    SELECT t.professorId" +
+                    "    FROM subjects s INNER JOIN teaching t \n" +
+                    "    ON t.subjectid = s.id \n" +
+                    "    WHERE s.degree = ?" +
+                    ") AS a \n" +
+                    "ON p.Id = a.professorId");
+
         } 
         catch (SQLException e) {e.printStackTrace();}
     }
@@ -89,17 +99,22 @@ public class DBManager {
     
 
     // QUERY per il ritorno di tutti i professori
-    List<Professor> getProfessors() {
+    List<Professor> getProfessors(int degree) {
 
         List<Professor> list = new ArrayList<>();
         try {
-            statement.execute(selectionProfessorsString);
-            result = statement.getResultSet();
+            if(degree < 0){
+                statement.execute("SELECT * FROM professors");
+                result = statement.getResultSet();
 
+            }else{
+                selectionProfByDegree.setInt(1, degree);
+                result = selectionProfByDegree.executeQuery();
+
+            }
             while(result.next()) {
                 list.add(new Professor(result.getInt("id"), result.getString("name"),
-                    result.getString("surname"), result.getString("info"), result.getInt("degree")));
-            	
+                    result.getString("surname"), result.getString("info"),-1));
             }
         } 
         catch (SQLException e) {e.printStackTrace();}

@@ -19,7 +19,7 @@ public class Professor extends Person{
 	}
 	
 	public String getName() {
-		return name.getValue();
+		return name.get();
 	}
 	public void setName(String n) {
 		name.set(n);
@@ -27,7 +27,7 @@ public class Professor extends Person{
 	
 	
 	public String getSurname() {
-		return surname.getValue();
+		return surname.get();
 	}
 	public void setSurname(String s) {
 		surname.set(s);
@@ -35,7 +35,7 @@ public class Professor extends Person{
 	
 	
 	String getInfo() {
-		return info.getValue();
+		return info.get();
 	}
 	void setInfo(String i) {
 		info.set(i);

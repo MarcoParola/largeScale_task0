@@ -21,25 +21,24 @@ public class GraphicInterface extends Application {
     TextArea info, comment, addInfo;
     Button loginBtn, logoutBtn, commentBtn, deleteBtn, updateBtn, addBtn, editBtn, deleteBtnProfSubj;
     ChoiceBox<String> choosePS, chooseDegree; //PS -> ProfessorSubject
-    TableView table, comments;
-    TableColumn idProfColumn, nameProfColumn, surnameProfColumn, idSubjectColumn, nameSubjectColumn, creditSubjectColumn;
-    TableColumn textColumn, dateColumn;
     HBox loginBox, logoutBox, commentBox, adminButtonsBox, FieldsAdminBox, chooseBox;
     VBox leftBox, rightBox, nameSurnameBox, InfoVBox, profIdBox;
     Group root;
     
     DBManager manager;
-    ObservableList<Professor> professorsList;
-    ObservableList<Subject> subjectsList;
-    ObservableList<Comment> commentsList;
     ObservableList<String> degreeList;
     
     Student student;
+    
+    CommentTable comments;
+    ProfSubjectTable table;
     
     @Override
     public void start(Stage primaryStage) {
     	
     	manager = new DBManager();
+    	table = new ProfSubjectTable(this);
+    	comments = new CommentTable(this);
     	 
         //login box on the top
     	usernameLab = new Label("Username:");
@@ -64,7 +63,6 @@ public class GraphicInterface extends Application {
         info = new TextArea("Informations about Professors are visualized here");
         info.setWrapText(true);
         info.setEditable(false);
-        prepareComments();
         
         leftBox = new VBox(10);
         leftBox.getChildren().addAll(info,comments);
@@ -111,6 +109,8 @@ public class GraphicInterface extends Application {
         chooseDegree.setItems(degreeList);
         chooseDegree.getItems().add(0, "All");
         chooseDegree.getSelectionModel().selectFirst();
+        
+        table.setProfessorsList(manager.getProfessors(-1));
        
         // add event to choiceProfSubject changing selection value
         choosePS.getSelectionModel().selectedIndexProperty().addListener((ChangeListener<? super Number>) new ChangeListener<Number>() {
@@ -119,15 +119,14 @@ public class GraphicInterface extends Application {
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
 
                 if((choosePS.getItems().get((Integer) newValue)) == "Subjects") {
-                	setProfessorComments(-1);
-                	setSubjectsList();
+                	comments.setProfessorComments(-1);
+                	table.setSubjectsList(manager.getSubjects());
                 }
                 else if((choosePS.getItems().get((Integer) newValue)) == "Professors") {
-                	setSubjectComments(-1);
-                	setProfessorsList();
+                	comments.setSubjectComments(-1);
+                	table.setProfessorsList(manager.getProfessors(-1));
                 }
-                info.setText("Informations about " + choosePS.getItems().get((Integer) newValue) +" are visualized here");   
-               
+                info.setText("Informations about " + choosePS.getItems().get((Integer) newValue) +" are visualized here");  
             }
         });
        
@@ -135,19 +134,26 @@ public class GraphicInterface extends Application {
         chooseDegree.getSelectionModel().selectedIndexProperty().addListener((ChangeListener<? super Number>) new ChangeListener<Number>() {
 
             @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-            	resetLists();            	
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {      	
             	  
             	if((chooseDegree.getItems().get((Integer) newValue)) == "All"){
-
+            		if("Subjects".equals((String)choosePS.getValue())){
+                		table.setSubjectsList(manager.getSubjects());
+                	} else {
+                		table.setProfessorsList(manager.getProfessors(-1));
+                	}  
             	} else {
             		int degreeId = manager.getDegreeId((String)(chooseDegree.getItems().get((Integer) newValue)));
-            		updateSubjectProfListLogin(degreeId);
+            		table.updateSubjectProfListLogin(degreeId);
+            		if("Subjects".equals((String)choosePS.getValue())){
+                		table.setSubjectsList(manager.getSubjects());
+                	} else {
+                		table.setProfessorsList(manager.getProfessors(degreeId));
+                	}  
             	}
             }
         });     
         
-        prepareTable();
         //admin buttons
     	editBtn = new Button("Edit");
     	deleteBtnProfSubj = new Button("Delete");
@@ -179,7 +185,7 @@ public class GraphicInterface extends Application {
         root = new Group();
         root.getChildren().addAll(loginBox, logoutBox, leftBox, rightBox, adminButtonsBox, commentBox, FieldsAdminBox);
         
-        Scene scene = new Scene(root, 1110, 700);
+        Scene scene = new Scene(root, 1210, 700);
         primaryStage.setTitle("Students Evaluations");
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -196,12 +202,12 @@ public class GraphicInterface extends Application {
                 if("Professors".equals(type)){
                     Professor p = (Professor)o;
                     info.setText(p.getInfo());
-                    setProfessorComments(p.getId());
+                    comments.setProfessorComments(p.getId());
                     
                 }else{
                     Subject s = (Subject)o;
                     info.setText(s.getInfo());
-                    setSubjectComments(s.getId());
+                    comments.setSubjectComments(s.getId());
                     
                 }
             }
@@ -214,19 +220,17 @@ public class GraphicInterface extends Application {
 	                Subject s = (Subject) table.getSelectionModel().getSelectedItem();
 	                SubjectComment c = new SubjectComment(0, comment.getText(),student.getId(),s.getId(),new Date());
 	                manager.insertCommentSubject(c.getStudent(), c.getSubject(), c.getText());
-	                this.setSubjectComments(s.getId());
+	                comments.setSubjectComments(s.getId());
 	            }else{
 	                Professor p = (Professor) table.getSelectionModel().getSelectedItem();
 	                ProfessorComment c = new ProfessorComment(0,comment.getText(),student.getId(),p.getId(),new Date());
 	                manager.insertCommentProf(c.getStudent(), c.getProfessor(), c.getText());
-	                this.setProfessorComments(p.getId());
+	                comments.setProfessorComments(p.getId());
 	            }
-	            
 	            this.comment.setText("");
 	    
             }else 
             	System.out.println("You have to login!\n");
-            
         });
         
         //update comment
@@ -238,19 +242,17 @@ public class GraphicInterface extends Application {
 	            
 	                manager.updateCommentSubject(sc.getId(), comment.getText(), student.getId());
 	                
-	                this.setSubjectComments(s.getId());
+	                comments.setSubjectComments(s.getId());
 	            }else{
 	                Professor p = (Professor) table.getSelectionModel().getSelectedItem();
 	                ProfessorComment c = (ProfessorComment) comments.getSelectionModel().getSelectedItem();
 	                
 	                manager.updateCommentProf(c.getId(), comment.getText(), student.getId());
 	                
-	                this.setProfessorComments(p.getId());
+	                comments.setProfessorComments(p.getId());
 	            }
-	    
             }else 
             	System.out.println("You have to login!\n");
-            
         });
         
         //delete comment
@@ -259,24 +261,17 @@ public class GraphicInterface extends Application {
 	            if("Subjects".equals((String)choosePS.getValue())){
 	                Subject s = (Subject) table.getSelectionModel().getSelectedItem();
 	                SubjectComment sc = (SubjectComment) comments.getSelectionModel().getSelectedItem();
-	                
-	                        
-	                
 	                manager.deleteCommentSubject(sc.getId(),student.getId(), student.getAdmin());
-	                
-	                this.setSubjectComments(s.getId());
+	                comments.setSubjectComments(s.getId());
 	            }else{
 	                Professor p = (Professor) table.getSelectionModel().getSelectedItem();
 	                ProfessorComment c = (ProfessorComment) comments.getSelectionModel().getSelectedItem();
 	                
 	                manager.deleteCommentProf(c.getId(), student.getId(), student.getAdmin());
-	                
-	                this.setProfessorComments(p.getId());
+	                comments.setProfessorComments(p.getId());
 	            }
-	    
             }else 
             	System.out.println("You have to login!\n");
-            
         });
         
         //Add professor/course button for admin
@@ -301,17 +296,12 @@ public class GraphicInterface extends Application {
                 manager.insertProfessor(p.getName(), p.getSurname(), p.getInfo());
                 name.setText("");
                 surnameAndCredits.setText("");
-                addInfo.setText("");
-                
-            }
-        
-            
+                addInfo.setText("");   
+            }   
         });
     }
 
-    
-    
-
+   
     // STYLE
     private void setCssStyle(){
         root.setStyle("-fx-color:orange; -fx-font-size: 14; -fx-font-family: Arial");
@@ -368,154 +358,6 @@ public class GraphicInterface extends Application {
   		}
   	}
   	
-    // prepare table for professors and subjects
-    private void prepareTable() {
-    	
-    	professorsList = FXCollections.observableArrayList(); 
-        professorsList.addAll(manager.getProfessors());        
-        
-        subjectsList = FXCollections.observableArrayList(); 
-        subjectsList.addAll(manager.getSubjects());
-        
-        table = new TableView<>();
-        table.setEditable(true);
-        
-        idProfColumn = new TableColumn("ID");
-        idProfColumn.setCellValueFactory(new PropertyValueFactory<Professor, String>("id"));
-        
-        nameProfColumn = new TableColumn("NAME");
-        nameProfColumn.setCellValueFactory(new PropertyValueFactory<Professor, String>("name"));
-        
-        surnameProfColumn = new TableColumn("SURNAME");
-        surnameProfColumn.setCellValueFactory(new PropertyValueFactory<Professor, String>("surname"));
-                
-        idSubjectColumn = new TableColumn("ID");
-        idSubjectColumn.setCellValueFactory(new PropertyValueFactory<Subject, String>("id"));
-        
-        nameSubjectColumn = new TableColumn("NAME");
-        nameSubjectColumn.setCellValueFactory(new PropertyValueFactory<Subject, String>("name"));
-        
-        creditSubjectColumn = new TableColumn("CREDITS");
-        creditSubjectColumn.setCellValueFactory(new PropertyValueFactory<Subject, String>("credits"));
-    	
-        setProfessorsList();
-        table.setColumnResizePolicy(CONSTRAINED_RESIZE_POLICY);
-       
-    }
-    
-    private void prepareComments(){
-        commentsList = FXCollections.observableArrayList(); 
-        
-        comments = new TableView<>();
-        comments.setEditable(true);
-        
-        textColumn = new TableColumn("Text");
-        textColumn.setCellValueFactory(new PropertyValueFactory<Comment, String>("text"));
-        dateColumn = new TableColumn("Date");
-        dateColumn.setCellValueFactory(new PropertyValueFactory<Comment, Date>("date"));
-        
-    	comments.getColumns().addAll(textColumn, dateColumn);
-        comments.setItems(commentsList);
-        comments.setColumnResizePolicy(CONSTRAINED_RESIZE_POLICY);
-        
-    }
-    
-    // update table: set professors information
-    private void setProfessorsList() {
-        table.getColumns().clear();
-        
-    	table.setItems(professorsList);
-    	table.getColumns().addAll(idProfColumn, nameProfColumn, surnameProfColumn);
-    	/*
-    	idProfColumn.prefWidthProperty().bind(table.widthProperty().multiply(0.08));
-    	nameProfColumn.prefWidthProperty().bind(table.widthProperty().multiply(0.46));
-    	surnameProfColumn.prefWidthProperty().bind(table.widthProperty().multiply(0.46));
-    	
-    	idProfColumn.setResizable(false);
-    	nameProfColumn.setResizable(false);
-    	surnameProfColumn.setResizable(false);
-    	*/
-        
-		if(student!= null && student.getAdmin()) {
-
-			FieldsAdminBox.setVisible(true);
-			infoLab.setText("Professor Informations:");
-			surnameAndCreditsLab.setText("Surname:");
-			FieldsAdminBox.getChildren().remove(profIdBox);
-			
-        }else {
-        	FieldsAdminBox.setVisible(false);
-        }
-    }
-    
-    // update table: set subjects information
-    private void setSubjectsList() {
-    	
-    	table.getColumns().clear();
-    	table.setItems(subjectsList);
-    	table.getColumns().addAll(idSubjectColumn, nameSubjectColumn, creditSubjectColumn);
-    	comments.setItems(commentsList);
-    	/*
-    	idSubjectColumn.prefWidthProperty().bind(table.widthProperty().multiply(0.08));
-    	nameSubjectColumn.prefWidthProperty().bind(table.widthProperty().multiply(0.74));
-    	creditSubjectColumn.prefWidthProperty().bind(table.widthProperty().multiply(0.18));
-    	
-    	idSubjectColumn.setResizable(false);
-    	nameSubjectColumn.setResizable(false);
-    	creditSubjectColumn.setResizable(false);
-    	*/
-    	if(student!= null && student.getAdmin()) {
-    		FieldsAdminBox.setVisible(true);
-    		infoLab.setText("Subject Informations:");
-			surnameAndCreditsLab.setText("Credits:");
-			if(!FieldsAdminBox.getChildren().contains(profIdBox))
-				FieldsAdminBox.getChildren().add(2, profIdBox);
-        }else {
-        	FieldsAdminBox.setVisible(false);
-        }
-    }
-    
-    private void resetLists() {
-    	subjectsList.clear();
-		subjectsList.addAll(manager.getSubjects());
-		professorsList.clear();	
-		professorsList.addAll(manager.getProfessors());
-    
-    	if("Subjects".equals((String)choosePS.getValue())){
-    		setSubjectsList();
-    	} else {
-    		setProfessorsList();
-    	}
-    }
-    
-    private void setProfessorComments(int profID){
-        commentsList.clear();
-        commentsList.addAll(manager.getProfessorComments(profID));
-    }
-    
-    private void setSubjectComments(int subID){
-        commentsList.clear();
-        commentsList.addAll(manager.getSubjectComments(subID));
-    }
-    
-    //update the right box table of professors/subjects
-    private void updateSubjectProfListLogin(int degreeId) {
-    	int i = 0;
-        while(i < subjectsList.size()) {
-        	if(subjectsList.get(i).getDegree() == degreeId)
-                i++;
-        	else
-                subjectsList.remove(i);
-        }
-   
-        i = 0;
-        while(i < professorsList.size()) {
-        	if(professorsList.get(i).getDegree() == degreeId)
-                i++;
-        	else
-                professorsList.remove(i);
-        }   
-    }
     
     // function for click on loginButton
     private void loginAction() {
@@ -525,7 +367,7 @@ public class GraphicInterface extends Application {
     		loginBox.setVisible(false);
     		logoutBox.setVisible(true);
     		studentLab.setText("User: " + student.getUsername());
-            updateSubjectProfListLogin(student.getDegree());    
+            table.updateSubjectProfListLogin(student.getDegree());    
             
             //update the degree course choice box based on the student degree course.
             chooseDegree.setValue(manager.getDegreeName(student.getDegree()));
@@ -535,23 +377,22 @@ public class GraphicInterface extends Application {
             
             //updates STYLE sizes based on the logged user (admin or not)
             updateSizes();
-            
-            if(choosePS.getSelectionModel().getSelectedIndex() == 1)
-                setSubjectsList();
-            else if(choosePS.getSelectionModel().getSelectedIndex() == 0)
-            	setProfessorsList();
     	}
     }
     
     private void logoutAction(){
     	chooseDegree.setValue("All");
-    	resetLists();
     	logoutBox.setVisible(false);
     	loginBox.setVisible(true);
     	adminButtonsBox.setVisible(false); 
     	FieldsAdminBox.setVisible(false);
     	student = null;
     	updateSizes();
+    	if("Subjects".equals((String)choosePS.getValue())){
+    		table.setSubjectsList(manager.getSubjects());
+    	} else {
+    		table.setProfessorsList(manager.getProfessors(-1));
+    	}
     }
     
     // MAIN
@@ -559,4 +400,3 @@ public class GraphicInterface extends Application {
         launch(args);
     }   
 }
-
