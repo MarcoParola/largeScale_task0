@@ -6,7 +6,7 @@ import java.util.*;
 public class DBManager {
 
     private static String ip = "localhost";
-    private static int port = 3307;
+    private static int port = 3306;
     private static String db_name = "studentsevaluations";
     private static String db_user = "root";
 
@@ -15,14 +15,19 @@ public class DBManager {
     private ResultSet result;
 
     private static String selectionSubjectsString = "SELECT * FROM subjects";
-    private static String selectionProfessorsString =   "SELECT p.*, a.degree\n" +
-                                                        "FROM professors p JOIN (\n" +
-                                                        "    SELECT t.professorId, s.degree\n" +
-                                                        "    FROM subjects s INNER JOIN teaching t \n" +
-                                                        "    ON t.subjectid = s.id \n" +
-                                                        ") AS a \n" +
-                                                        "ON p.Id = a.professorId";
-    private static String selectionUserString =  "SELECT * FROM `users` WHERE Username = ? AND Password = ?;";
+    private static String selectionSubjectByDegreeString = "SELECT * FROM subjects WHERE degree = ?";
+    private static String selectionProfessorsString =   "SELECT * FROM professors";
+    private static String selectionProfByDegreeString = "SELECT p.*" +
+                                                                "FROM professors p JOIN (\n" +
+                                                                "    SELECT t.professorId" +
+                                                                "    FROM subjects s INNER JOIN teaching t \n" +
+                                                                "    ON t.subjectid = s.id \n" +
+                                                                "    WHERE s.degree = ?" +
+                                                                ") AS a \n" +
+                                                                "ON p.Id = a.professorId";
+    private static String selectionUserString =   "SELECT u.*, d.name ad degreename "
+                                                + "FROM `users` as u JOIN 'degree_programmes' as d "
+                                                + "ON u.degree = d.id WHERE Username = ? AND Password = ?";
     private static String insertProfCommentString = "INSERT INTO `prof_comments` (`userId`, `professorId`, `text`, `date`) "
                                                     + "VALUES (?, ?, ?, current_timestamp());";
     private static String insertSubjectCommentString =  "INSERT INTO `subject_comments` (`id`, `userId`, `subjectId`, `text`, `date`) "
@@ -38,20 +43,18 @@ public class DBManager {
     private PreparedStatement insertSubjectCommentStatement;
     private PreparedStatement selectionDegreeIdStatement;
     private PreparedStatement selectionDegreeNameStatement;
+    private PreparedStatement selectionSubjectByDegree;
     private PreparedStatement selectionProfByDegree;
 
     /*
-     
      
     ----- SUBJECT -----
     UPDATE `subject_comments` SET `text` = ? WHERE `subject_comments`.`id` = ?;
     DELETE FROM `subject_comments` WHERE `subject_comments`.`id` = ?;
     
-    
     ----- PROF -----
     UPDATE `prof_comments` SET `text` = ? WHERE `prof_comments`.`id` = ?;
     DELETE FROM `prof_comments` WHERE `prof_comments`.`id` = ?;
-    
     
     */
     // CONSTRUCTOR
@@ -65,14 +68,8 @@ public class DBManager {
             insertSubjectCommentStatement = connection.prepareStatement(insertSubjectCommentString);
             selectionDegreeIdStatement = connection.prepareStatement(selectionDegreeIdString);
             selectionDegreeNameStatement = connection.prepareStatement(selectionDegreeNameString);
-            selectionProfByDegree = connection.prepareStatement("SELECT p.*" +
-                    "FROM professors p JOIN (\n" +
-                    "    SELECT t.professorId" +
-                    "    FROM subjects s INNER JOIN teaching t \n" +
-                    "    ON t.subjectid = s.id \n" +
-                    "    WHERE s.degree = ?" +
-                    ") AS a \n" +
-                    "ON p.Id = a.professorId");
+            selectionSubjectByDegree = connection.prepareStatement(selectionSubjectByDegreeString);
+            selectionProfByDegree = connection.prepareStatement(selectionProfByDegreeString);
 
         } 
         catch (SQLException e) {e.printStackTrace();}
@@ -81,13 +78,18 @@ public class DBManager {
     
 
     // QUERY per il ritorno di tutte le materie
-    List<Subject> getSubjects() {
-
-        List <Subject> list = new ArrayList<Subject>();
+    List<Subject> getSubjects(int degree) {
+        
+        List <Subject> list = new ArrayList<>();
         try {
-            statement.execute(selectionSubjectsString);
-            result = statement.getResultSet();
+            if(degree < 0){
+                statement.execute(selectionSubjectsString);
+                result = statement.getResultSet();
+            }else{
+                selectionSubjectByDegree.setInt(1, degree);
+                result = selectionSubjectByDegree.executeQuery();
 
+            }
             while(result.next())
                 list.add(new Subject(result.getInt("Id"), result.getString("name"), 
                     result.getInt("credits"),result.getString("info"), result.getInt("degree")));
@@ -104,7 +106,7 @@ public class DBManager {
         List<Professor> list = new ArrayList<>();
         try {
             if(degree < 0){
-                statement.execute("SELECT * FROM professors");
+                statement.execute(selectionProfessorsString);
                 result = statement.getResultSet();
 
             }else{
@@ -114,7 +116,7 @@ public class DBManager {
             }
             while(result.next()) {
                 list.add(new Professor(result.getInt("id"), result.getString("name"),
-                    result.getString("surname"), result.getString("info"),-1));
+                    result.getString("surname"), result.getString("info")));
             }
         } 
         catch (SQLException e) {e.printStackTrace();}
@@ -141,17 +143,17 @@ public class DBManager {
     }
     
     //QUERY to retrieve degree courses.
-    List<String> getDegreeCourses(){
-        List<String> list = new ArrayList<>();
+    List<Degree> getDegreeCourses(){
+        List<Degree> list = new ArrayList<>();
         try {
-        	
-            statement.execute(selectionDegreeProgrammesString);
+            statement.execute("SELECT * FROM `degree_programmes`");
             result = statement.getResultSet();
 
             while(result.next()) 
-                list.add(result.getString("name"));
-        } 
-        catch (SQLException e) {e.printStackTrace();}
+                list.add(new Degree(result.getInt("id"),result.getString("name")));
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
         return list;   
     }
     
@@ -218,7 +220,9 @@ public class DBManager {
             if(!result.first()) {
                 return null;
             }else{
-                return new Student(result.getInt("Id"), result.getString("Username"), result.getInt("degree"), result.getBoolean("admin"));
+                return new Student(result.getInt("Id"), result.getString("Username"), 
+                        new Degree(result.getInt("degree"),result.getString("degreename")), 
+                        result.getBoolean("admin"));
             }
         } 
         catch (SQLException e) {e.printStackTrace();}

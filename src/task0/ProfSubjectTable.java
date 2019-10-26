@@ -23,7 +23,7 @@ public class ProfSubjectTable extends TableView<Object>{
         professorsList.addAll(graphic.manager.getProfessors(-1));        
         
         subjectsList = FXCollections.observableArrayList(); 
-        subjectsList.addAll(graphic.manager.getSubjects());
+        subjectsList.addAll(graphic.manager.getSubjects(-1));
         
         //table = new TableView<>();
         
@@ -90,25 +90,5 @@ public class ProfSubjectTable extends TableView<Object>{
         }else {
         	graphic.FieldsAdminBox.setVisible(false);
         }
-    }
-	
-	 //update the right box table of professors/subjects
-    void updateSubjectProfListLogin(int degreeId) {
-    	int i = 0;
-        while(i < subjectsList.size()) {
-        	if(((Subject)subjectsList.get(i)).getDegree() == degreeId)
-                i++;
-        	else
-                subjectsList.remove(i);
-        }
-   
-        i = 0;
-        while(i < professorsList.size()) {
-        	if(((Professor)professorsList.get(i)).getDegree() == degreeId)
-                i++;
-        	else
-                professorsList.remove(i);
-        }   
-    }
-    
+    }    
 }
